@@ -114,7 +114,7 @@ def serve_project(
     paths: list[str],
     host: str = "127.0.0.1",
     port: int = 8089,
-    open_browser: bool = False,
+    open_browser: bool = True,
     watch: bool = True,
 ) -> None:
     """Start the local Casebook web server for the selected YAML paths."""
@@ -153,11 +153,10 @@ def serve_project(
         watch=watch,
     ))
 
-    if open_browser:
-        webbrowser.open(browser_url)
-
     server = make_server(host, port, flask_app, threaded=True,
                          request_handler=LoguruRequestHandler)
+    if open_browser:
+        webbrowser.open(browser_url)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
@@ -184,8 +183,11 @@ def serve(
     ] = 8089,
     open_browser: Annotated[
         bool,
-        typer.Option("--open", "-o", help="Open the web UI in a browser."),
-    ] = False,
+        typer.Option(
+            "--open/--no-open",
+            help="Open the web UI in the default browser (enabled by default).",
+        ),
+    ] = True,
     no_watch: Annotated[
         bool,
         typer.Option("--no-watch", help="Disable filesystem auto-refresh."),
