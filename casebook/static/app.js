@@ -1,9 +1,87 @@
 const SIDEBAR_STORAGE_KEY = "casebook.sidebarWidth";
 const CURRENT_RUN_STORAGE_PREFIX = "casebook.currentRun";
+const LANGUAGE_STORAGE_KEY = "casebook.language";
+
+const ZH_TRANSLATIONS = {
+  "Test quality workspace": "测试质量工作台", "Toggle sidebar": "切换侧边栏",
+  "Open SeldomQA casebook on GitHub": "在 GitHub 打开 SeldomQA Casebook", "Sidebar": "侧边栏",
+  "Case Files": "用例文件", "Loading cases...": "正在加载用例...", "Loading...": "正在加载...",
+  "Resize sidebar": "调整侧边栏宽度", "AI-NATIVE TEST ENGINEERING": "AI 原生测试工程",
+  "Test case workspace": "测试用例工作台",
+  "Review test assets, focus risk, and track execution in one local workspace.": "在一个本地工作台中评审测试资产、聚焦风险并跟踪执行。",
+  "Project overview": "项目概览", "Files": "文件", "Cases": "用例", "P0 risk": "P0 风险", "Automated": "自动化",
+  "The YAML files changed while you were editing.": "编辑期间 YAML 文件已发生变化。", "Reload now": "立即重新加载",
+  "Test plan": "测试计划", "No plan selected": "未选择计划", "Manage plan": "管理计划",
+  "Progress": "进度", "Not enabled": "未启用", "No file selected": "未选择文件",
+  "Choose a YAML file from the Case Files navigation to review and edit its cases.": "从用例文件导航中选择 YAML 文件以评审和编辑用例。",
+  "ID sorting": "ID 排序", "Execution result filter": "执行结果筛选", "Filter current file": "筛选当前文件",
+  "Title": "标题", "Priority": "优先级", "Type": "类型", "Tags": "标签", "Plans": "计划", "Actions": "操作",
+  "No matching cases": "没有匹配的用例", "Adjust the current file filter and try again.": "请调整当前文件筛选条件后重试。",
+  "test execution": "测试执行", "Close test plan drawer": "关闭测试计划抽屉", "Current plan": "当前计划",
+  "Select the plan used for case execution.": "选择用于执行用例的测试计划。", "Select current test plan": "选择当前测试计划",
+  "Create plan": "创建计划", "Create a full run or retest unresolved cases.": "创建全量执行计划或重测未解决用例。",
+  "New test plan mode": "新测试计划模式", "Full run": "全量执行",
+  "Retest failed/blocked/deferred": "重测失败、阻塞或延期用例", "Source test plan": "来源测试计划",
+  "New test plan name": "新测试计划名称", "Complete plan": "完成计划", "Select a test plan first.": "请先选择测试计划。",
+  "Environment": "测试环境", "Tester": "测试人员", "Test report name": "测试报告名称",
+  "Complete plan & generate report": "完成计划并生成报告", "Generated reports": "已生成报告",
+  "edit case": "编辑用例", "Untitled": "未命名", "Close editor": "关闭编辑器", "case id": "用例 ID",
+  "title": "标题", "description": "描述", "priority": "优先级", "type": "类型", "tags": "标签",
+  "preconditions": "前置条件", "steps": "步骤", "expected results": "预期结果", "automated case": "自动化用例",
+  "add to plan": "加入计划", "Select a test plan": "选择测试计划", "Add to plan": "加入计划", "Save": "保存",
+  "Close screenshot preview": "关闭截图预览", "Screenshot preview": "截图预览", "Screenshot": "截图",
+  "Execution screenshot preview": "执行截图预览", "No scan directory": "没有扫描目录", "No YAML cases found.": "未找到 YAML 用例。",
+  "Module": "模块", "Feature": "功能", "Owner": "负责人", "Reviewed": "评审日期", "Path": "路径", "Unknown": "未知",
+  "Current plan: none": "当前计划：无", "Source plan": "来源计划", "New retest plan name": "新重测计划名称",
+  "Create retest": "创建重测计划", "Generate report": "生成报告", "Selected plan": "已选择计划",
+  "All": "全部", "Passed": "通过", "Failed": "失败", "Blocked": "阻塞", "Deferred": "延期", "Untested": "未测试",
+  "Pass": "通过", "Fail": "失败", "Block": "阻塞", "Defer": "延期", "Edit": "编辑", "Auto": "自动化",
+  "Preconditions": "前置条件", "Steps": "步骤", "Expected Results": "预期结果", "Execution": "执行信息",
+  "Execution status": "执行状态", "Mark": "标记", "Describe what should be updated": "描述需要更新的内容",
+  "Save review": "保存评审", "Actual Result": "实际结果",
+  "Actual result observed during execution": "记录执行过程中观察到的实际结果", "Notes": "备注",
+  "Execution notes": "执行备注", "Defects": "缺陷", "Bug links or defect IDs, one per line": "缺陷链接或缺陷 ID，每行一个",
+  "Screenshots": "截图", "Upload screenshot": "上传截图", "Save execution": "保存执行信息",
+  "No screenshots": "暂无截图", "Delete screenshot": "删除截图", "None": "无", "Select an active plan": "选择进行中的计划",
+  "Select language": "选择语言",
+  "{files} files - {cases} cases": "{files} 个文件 - {cases} 条用例", "Scope: {scope}": "范围：{scope}",
+  "Scope: {scope} - {mode} - {count} cases": "范围：{scope} - {mode} - {count} 条用例",
+  "{executed} / {total} executed - {percent}%": "已执行 {executed} / {total} - {percent}%",
+  "{count} cases": "{count} 条用例", "No records": "暂无记录", "Open {name}": "打开 {name}",
+  "Full": "全量", "Retest": "重测", "Collapse case details": "收起用例详情", "Expand case details": "展开用例详情",
+  "Copy case ID": "复制用例 ID", "Copy case ID {id}": "复制用例 ID {id}",
+  "Completed test plans cannot be updated": "已完成的测试计划不能修改",
+  "Update IDs and preserve execution results in the current test plan": "更新 ID 并保留当前计划的执行结果",
+  "Update case IDs using the current YAML order": "按当前 YAML 顺序更新用例 ID",
+  "This test plan is completed. Enter a report name to generate it again.": "该测试计划已完成。输入报告名称可再次生成报告。",
+  "{count} untested cases remain before completion.": "完成计划前还有 {count} 条未测试用例。",
+  "All cases are executed. Add the report name, then complete the plan.": "所有用例均已执行。填写报告名称后完成计划。",
+  "Included in: {plans}": "已加入：{plans}", "Not included in a test plan.": "尚未加入测试计划。",
+  "Enter a test plan name": "请输入测试计划名称", "Select a source test plan": "请选择来源测试计划",
+  "Create a full test plan for the current scope": "为当前范围创建全量测试计划",
+  "Create a new plan from the selected plan's failed, blocked, and deferred cases": "根据所选计划中失败、阻塞和延期的用例创建重测计划",
+  "Select an active test plan": "请选择进行中的测试计划", "Case added to test plan": "用例已加入测试计划",
+  "Case is already in this test plan": "用例已在该测试计划中", "Saved to YAML": "已保存到 YAML",
+  "Review details saved": "评审信息已保存", "Enter a test plan name before creating the plan": "创建计划前请输入测试计划名称",
+  "Select a source test plan before creating a retest plan": "创建重测计划前请选择来源测试计划",
+  "Retest plan created": "重测计划已创建", "Test plan created": "测试计划已创建",
+  "Select or create a test plan first": "请先选择或创建测试计划", "Enter a test report name": "请输入测试报告名称",
+  "Test report generated": "测试报告已生成", "Test plan completed": "测试计划已完成",
+  "Execution details saved": "执行信息已保存", "Choose a screenshot first": "请先选择截图",
+  "Screenshot uploaded": "截图已上传", "Screenshot deleted": "截图已删除", "Delete this screenshot?": "确定删除这张截图吗？",
+  "Update case IDs and synchronize this file with the current test plan? Existing execution results will be retained by case mapping.": "是否更新用例 ID 并将该文件同步到当前测试计划？现有执行结果会按用例映射保留。",
+  "Update case IDs using the current YAML order? The case order will not change.": "是否按当前 YAML 顺序更新用例 ID？用例顺序不会改变。",
+  "Generate a report for this completed test plan": "为已完成的测试计划生成报告",
+  "Complete the test plan and generate its report": "完成测试计划并生成报告",
+  "Cannot complete: {count} untested cases remain": "无法完成：还有 {count} 条用例未测试",
+  "{name} report": "{name} 报告", "Report": "报告", "No scope": "无范围",
+  "Enter a valid report name": "请输入有效的报告名称"
+};
 const SIDEBAR_MIN_WIDTH = 260;
 const SIDEBAR_MAX_WIDTH = 560;
 
 const state = {
+  language: readStoredLanguage(),
   summary: null,
   tree: [],
   marks: {},
@@ -44,6 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
 function bindElements() {
   [
     "scanDirs",
+    "languageToggle",
     "summaryText",
     "overviewFiles",
     "overviewCases",
@@ -118,6 +197,9 @@ function bindElements() {
 }
 
 function bindEvents() {
+  els.languageToggle.addEventListener("change", () => {
+    setLanguage(els.languageToggle.value);
+  });
   els.sidebarToggle.addEventListener("click", toggleSidebar);
   els.sidebarResizer.addEventListener("pointerdown", startSidebarResize);
   els.sidebarResizer.addEventListener("keydown", handleSidebarResizeKeydown);
@@ -181,7 +263,7 @@ function bindEvents() {
       event.stopPropagation();
       openScreenshotViewer(
         screenshotPreviewButton.dataset.src,
-        screenshotPreviewButton.dataset.name || "Screenshot",
+        screenshotPreviewButton.dataset.name || t("Screenshot"),
       );
       return;
     }
@@ -328,12 +410,126 @@ function clamp(value, min, max) {
 }
 
 async function boot() {
+  applyStaticTranslations();
   await refreshAll();
   connectEvents();
   const hashPath = decodeURIComponent(window.location.hash.replace(/^#/, ""));
   if (hashPath) {
     await loadFile(hashPath);
   }
+}
+
+function readStoredLanguage() {
+  try {
+    return window.localStorage.getItem(LANGUAGE_STORAGE_KEY) === "zh-CN" ? "zh-CN" : "en";
+  } catch (_error) {
+    return "en";
+  }
+}
+
+function t(key, values = {}) {
+  const template = state.language === "zh-CN" ? (ZH_TRANSLATIONS[key] || key) : key;
+  return Object.entries(values).reduce(
+    (text, [name, value]) => text.replaceAll(`{${name}}`, String(value)),
+    template,
+  );
+}
+
+function setLanguage(language) {
+  state.language = language === "zh-CN" ? "zh-CN" : "en";
+  try {
+    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, state.language);
+  } catch (_error) {
+    // Language switching still works when browser storage is unavailable.
+  }
+  applyStaticTranslations();
+  if (state.summary) renderShell();
+  renderExecutionPanel();
+  if (state.currentData) {
+    renderFileMeta();
+    renderFilters();
+    renderCaseRows();
+  }
+  if (state.selectedCaseId) {
+    const selected = findCase(state.selectedCaseId);
+    if (selected) fillDrawer(selected);
+  }
+}
+
+function setText(selector, key) {
+  const node = document.querySelector(selector);
+  if (node) node.textContent = t(key);
+}
+
+function setAttribute(selector, attribute, key) {
+  const node = document.querySelector(selector);
+  if (node) node.setAttribute(attribute, t(key));
+}
+
+function setFormLabel(controlId, key) {
+  const label = document.getElementById(controlId)?.closest("label")?.querySelector(":scope > span");
+  if (label) label.textContent = t(key);
+}
+
+function applyStaticTranslations() {
+  document.documentElement.lang = state.language;
+  els.languageToggle.value = state.language;
+  els.languageToggle.setAttribute("aria-label", t("Select language"));
+  [
+    [".app-brand-copy small", "Test quality workspace"], [".sidebar-heading h2", "Case Files"],
+    ["#summaryText", "Loading cases..."], ["#scanDirs", "Loading..."],
+    [".dashboard-kicker", "AI-NATIVE TEST ENGINEERING"], ["#workspaceTitle", "Test case workspace"],
+    [".dashboard-hero-copy > p:last-child", "Review test assets, focus risk, and track execution in one local workspace."],
+    [".overview-files span", "Files"], [".overview-cases span", "Cases"], [".overview-risk span", "P0 risk"],
+    [".overview-auto span", "Automated"], ["#reloadNotice span", "The YAML files changed while you were editing."],
+    ["#reloadNowButton", "Reload now"], [".test-plan-title h3", "Test plan"], ["#executionToggle", "Manage plan"],
+    [".test-plan-progress-heading span", "Progress"], ["#emptyState h3", "No file selected"],
+    ["#emptyState p", "Choose a YAML file from the Case Files navigation to review and edit its cases."],
+    ["#renumberIdsButton", "ID sorting"], ["#noResults h3", "No matching cases"],
+    ["#noResults p", "Adjust the current file filter and try again."], [".test-plan-drawer .eyebrow", "test execution"],
+    [".test-plan-drawer .drawer-header h2", "Test plan"], [".plan-drawer-section:nth-child(1) .plan-section-heading span", "Current plan"],
+    [".plan-drawer-section:nth-child(1) .plan-section-heading small", "Select the plan used for case execution."],
+    [".plan-drawer-section:nth-child(2) .plan-section-heading span", "Create plan"],
+    [".plan-drawer-section:nth-child(2) .plan-section-heading small", "Create a full run or retest unresolved cases."],
+    [".completion-section .plan-section-heading span", "Complete plan"], ["#editorDrawer .eyebrow", "edit case"],
+    ["#addCaseToPlanButton", "Add to plan"], ["#saveCaseButton", "Save"],
+    ["#screenshotViewerTitle", "Screenshot"],
+  ].forEach(([selector, key]) => setText(selector, key));
+  [
+    ["fieldId", "case id"], ["fieldTitle", "title"], ["fieldDescription", "description"],
+    ["fieldPriority", "priority"], ["fieldType", "type"], ["fieldTags", "tags"],
+    ["fieldPreconditions", "preconditions"], ["fieldSteps", "steps"],
+    ["fieldExpectedResults", "expected results"], ["fieldAuto", "automated case"],
+    ["casePlanSelect", "add to plan"],
+  ].forEach(([controlId, key]) => setFormLabel(controlId, key));
+  const tableLabels = ["", "ID", "Title", "Priority", "Type", "Tags", "Plans", "Actions"];
+  document.querySelectorAll(".case-table-head > span").forEach((node, index) => {
+    if (tableLabels[index]) node.textContent = t(tableLabels[index]);
+  });
+  const modeOptions = els.runModeSelect.options;
+  if (modeOptions[0]) modeOptions[0].textContent = t("Full run");
+  if (modeOptions[1]) modeOptions[1].textContent = t("Retest failed/blocked/deferred");
+  setAttribute("#sidebarToggle", "aria-label", "Toggle sidebar");
+  setAttribute(".dashboard-overview", "aria-label", "Project overview");
+  setAttribute(".github-link", "aria-label", "Open SeldomQA casebook on GitHub");
+  setAttribute(".sidebar", "aria-label", "Sidebar");
+  setAttribute("#sidebarResizer", "aria-label", "Resize sidebar");
+  setAttribute("#caseSearch", "placeholder", "Filter current file");
+  setAttribute("#closeTestPlanDrawerButton", "aria-label", "Close test plan drawer");
+  setAttribute("#closeDrawerButton", "aria-label", "Close editor");
+  setAttribute("#screenshotViewerBackdrop", "aria-label", "Close screenshot preview");
+  setAttribute(".screenshot-viewer-dialog", "aria-label", "Screenshot preview");
+  setAttribute("#screenshotViewerImage", "alt", "Execution screenshot preview");
+  setAttribute("#runSelect", "aria-label", "Select current test plan");
+  setAttribute("#runModeSelect", "aria-label", "New test plan mode");
+  setAttribute("#sourceRunSelect", "aria-label", "Source test plan");
+  setAttribute("#executionFilter", "aria-label", "Execution result filter");
+  setAttribute("#casePlanSelect", "aria-label", "Select a test plan");
+  setAttribute("#reportOutputList", "aria-label", "Generated reports");
+  setAttribute("#runNameInput", "placeholder", "New test plan name");
+  setAttribute("#runEnvironmentInput", "placeholder", "Environment");
+  setAttribute("#runTesterInput", "placeholder", "Tester");
+  setAttribute("#reportNameInput", "placeholder", "Test report name");
 }
 
 async function refreshAll() {
@@ -427,8 +623,8 @@ async function reloadAfterExternalChange(force) {
 function renderShell() {
   const summary = state.summary || {};
   const stats = summary.stats || {};
-  els.scanDirs.textContent = (summary.scan_dirs || []).join(", ") || "No scan directory";
-  els.summaryText.textContent = `${summary.files || 0} files - ${summary.cases || 0} cases`;
+  els.scanDirs.textContent = (summary.scan_dirs || []).join(", ") || t("No scan directory");
+  els.summaryText.textContent = t("{files} files - {cases} cases", { files: summary.files || 0, cases: summary.cases || 0 });
   els.overviewFiles.textContent = summary.files || 0;
   els.overviewCases.textContent = summary.cases || 0;
   els.overviewP0.textContent = stats.priorities?.P0 || 0;
@@ -439,7 +635,7 @@ function renderShell() {
 
 function renderTree(items, depth) {
   if (!items || !items.length) {
-    return depth === 0 ? `<div class="empty-tree">No YAML cases found.</div>` : "";
+    return depth === 0 ? `<div class="empty-tree">${t("No YAML cases found.")}</div>` : "";
   }
   const rows = items.map((item) => {
     const pad = 12 + depth * 16;
@@ -510,17 +706,17 @@ function renderFileMeta() {
   if (!state.currentData) return;
   const data = state.currentData;
   const items = [
-    ["Module", data.module || "Unknown"],
-    ["Feature", data.feature || "Untitled"],
-    ["Owner", data.owner || "N/A"],
-    ["Reviewed", data.last_reviewed || "N/A"],
+    [t("Module"), data.module || t("Unknown")],
+    [t("Feature"), data.feature || t("Untitled")],
+    [t("Owner"), data.owner || "N/A"],
+    [t("Reviewed"), data.last_reviewed || "N/A"],
   ];
   els.fileMeta.innerHTML = `
     <div class="file-meta-row">
       ${items.map(([label, value]) => renderMetaItem(label, value)).join("")}
     </div>
     <div class="file-meta-row path-row">
-      ${renderMetaItem("Path", data.path || "", true)}
+      ${renderMetaItem(t("Path"), data.path || "", true)}
     </div>`;
 }
 
@@ -545,18 +741,18 @@ function renderExecutionPanel() {
   els.testPlanDrawer.setAttribute("aria-hidden", String(!state.testPlanExpanded));
   els.executionToggle.setAttribute("aria-expanded", String(state.testPlanExpanded));
   els.executionScopeText.textContent = run
-    ? `Scope: ${scope} - ${runModeLabel(run.mode)} - ${stats.total} cases`
-    : `Scope: ${scope}`;
+    ? t("Scope: {scope} - {mode} - {count} cases", { scope, mode: runModeLabel(run.mode), count: stats.total })
+    : t("Scope: {scope}", { scope });
   els.executionProgressText.textContent = run
-    ? `${stats.executed} / ${stats.total} executed - ${percent}%`
-    : "Not enabled";
+    ? t("{executed} / {total} executed - {percent}%", { executed: stats.executed, total: stats.total, percent })
+    : t("Not enabled");
   els.testPlanProgressOverview.hidden = !state.currentRunId;
   els.currentRunSummaryLabel.textContent = run
-    ? (run.name || run.id || "Selected plan")
-    : "No plan selected";
+    ? (run.name || run.id || t("Selected plan"))
+    : t("No plan selected");
 
   const options = [
-    `<option value="">Current plan: none</option>`,
+    `<option value="">${t("Current plan: none")}</option>`,
     ...runs.map((item) => `<option value="${escapeAttr(item.id)}">${escapeHtml(runOptionLabel(item))}</option>`),
   ];
   els.runSelect.innerHTML = options.join("");
@@ -564,7 +760,7 @@ function renderExecutionPanel() {
   const createMode = els.runModeSelect.value || "full";
   const previousSourceRunId = els.sourceRunSelect.value;
   const sourceOptions = [
-    `<option value="">Source plan</option>`,
+    `<option value="">${t("Source plan")}</option>`,
     ...runs.map((item) => `<option value="${escapeAttr(item.id)}">${escapeHtml(runOptionLabel(item))}</option>`),
   ];
   els.sourceRunSelect.innerHTML = sourceOptions.join("");
@@ -583,11 +779,11 @@ function renderExecutionPanel() {
   els.sourceRunSelect.hidden = createMode !== "retest_unresolved";
   els.sourceRunSelect.disabled = createMode !== "retest_unresolved";
   els.runNameInput.placeholder = createMode === "retest_unresolved"
-    ? "New retest plan name"
-    : "New test plan name";
+    ? t("New retest plan name")
+    : t("New test plan name");
   els.createRunButton.textContent = createMode === "retest_unresolved"
-    ? "Create retest"
-    : "Create plan";
+    ? t("Create retest")
+    : t("Create plan");
   syncCreateRunButtonState();
   const isCompleted = run?.status === "completed";
   const canFinishRun = Boolean(state.currentRunId && stats.total > 0 && stats.untested === 0);
@@ -596,52 +792,52 @@ function renderExecutionPanel() {
   els.runEnvironmentInput.value = run?.environment || defaults.environment;
   els.runTesterInput.value = run?.tester || defaults.tester;
   if (run && !els.reportNameInput.value.trim()) {
-    els.reportNameInput.value = `${run.name || run.id || "test-plan"} report`;
+    els.reportNameInput.value = t("{name} report", { name: run.name || run.id || "test-plan" });
   }
   els.runEnvironmentInput.disabled = !canCompleteRun;
   els.runTesterInput.disabled = !canCompleteRun;
   els.reportNameInput.disabled = !canFinishRun;
   els.completeRunButton.disabled = !canFinishRun;
   els.completeRunButton.textContent = isCompleted
-    ? "Generate report"
-    : "Complete plan & generate report";
+    ? t("Generate report")
+    : t("Complete plan & generate report");
   els.completeRunButton.title = state.currentRunId && stats.untested > 0
-    ? `Cannot complete: ${stats.untested} untested cases remain`
+    ? t("Cannot complete: {count} untested cases remain", { count: stats.untested })
     : isCompleted
-      ? "Generate a report for this completed test plan"
-      : "Complete the test plan and generate its report";
+      ? t("Generate a report for this completed test plan")
+      : t("Complete the test plan and generate its report");
   const reports = Array.isArray(run?.reports)
     ? [...run.reports].sort((left, right) => String(left.name || left.filename || "")
       .localeCompare(String(right.name || right.filename || "")))
     : [];
   els.reportOutputList.hidden = reports.length === 0;
   els.reportOutputList.innerHTML = reports.length ? `
-    <span class="report-output-heading">Generated reports</span>
+    <span class="report-output-heading">${t("Generated reports")}</span>
     ${reports.map((report) => `
     <a class="outline-button report-output-link"
       href="/reports/${encodeURIComponent(report.filename || "")}" target="_blank"
-      rel="noopener noreferrer" title="Open ${escapeAttr(report.name || report.filename || "report")}">
-      ${escapeHtml(report.name || report.filename || "Report")}
+      rel="noopener noreferrer" title="${escapeAttr(t("Open {name}", { name: report.name || report.filename || "report" }))}">
+      ${escapeHtml(report.name || report.filename || t("Report"))}
     </a>
     `).join("")}
   ` : "";
   els.completionHint.textContent = !state.currentRunId
-    ? "Select a test plan first."
+    ? t("Select a test plan first.")
     : isCompleted
-      ? "This test plan is completed. Enter a report name to generate it again."
+      ? t("This test plan is completed. Enter a report name to generate it again.")
       : stats.untested > 0
-        ? `${stats.untested} untested cases remain before completion.`
-        : "All cases are executed. Add the report name, then complete the plan.";
+        ? t("{count} untested cases remain before completion.", { count: stats.untested })
+        : t("All cases are executed. Add the report name, then complete the plan.");
   syncRenumberButton();
 
   els.executionProgressBar.style.width = `${percent}%`;
   els.executionStats.innerHTML = [
-    ["total", "Cases", stats.total],
-    ["passed", "Passed", stats.passed],
-    ["failed", "Failed", stats.failed],
-    ["blocked", "Blocked", stats.blocked],
-    ["deferred", "Deferred", stats.deferred],
-    ["untested", "Untested", stats.untested],
+    ["total", t("Cases"), stats.total],
+    ["passed", t("Passed"), stats.passed],
+    ["failed", t("Failed"), stats.failed],
+    ["blocked", t("Blocked"), stats.blocked],
+    ["deferred", t("Deferred"), stats.deferred],
+    ["untested", t("Untested"), stats.untested],
   ].map(([status, label, value]) => `
     <div class="execution-stat status-${status}">
       <strong>${value}</strong>
@@ -656,23 +852,23 @@ function syncRenumberButton() {
   const disabled = !state.currentData || completedPlan;
   els.renumberIdsButton.disabled = disabled;
   els.renumberIdsButton.title = completedPlan
-    ? "Completed test plans cannot be updated"
+    ? t("Completed test plans cannot be updated")
     : state.currentRunId
-      ? "Update IDs and preserve execution results in the current test plan"
-      : "Update case IDs using the current YAML order";
+      ? t("Update IDs and preserve execution results in the current test plan")
+      : t("Update case IDs using the current YAML order");
 }
 
 function runOptionLabel(run) {
   const name = run.name || run.id;
   const hasCaseTotal = run.case_total !== null && run.case_total !== undefined && run.case_total !== "";
   const count = hasCaseTotal && Number.isFinite(Number(run.case_total))
-    ? ` - ${Number(run.case_total)} cases`
+    ? ` - ${t("{count} cases", { count: Number(run.case_total) })}`
     : "";
   return `${name} - ${runModeLabel(run.mode)}${count}`;
 }
 
 function runModeLabel(mode) {
-  return mode === "retest_unresolved" ? "Retest" : "Full";
+  return mode === "retest_unresolved" ? t("Retest") : t("Full");
 }
 
 function testPlanStats() {
@@ -738,11 +934,11 @@ function renderFilters() {
   const counts = filterCounts();
   normalizeCurrentFilter();
   const filters = [
-    ["all", "All", counts.all],
+    ["all", t("All"), counts.all],
     ["P0", "P0", counts.P0],
     ["P1", "P1", counts.P1],
     ["P2", "P2", counts.P2],
-    ["needs", "Mark", counts.needs],
+    ["needs", t("Mark"), counts.needs],
   ];
   els.priorityFilters.innerHTML = filters.map(([value, label, count]) => {
     const active = state.filter === value ? " active" : "";
@@ -767,7 +963,7 @@ function renderExecutionFilter() {
   const counts = executionFilterCounts();
   els.executionFilter.innerHTML = EXECUTION_FILTERS.map(([value, label]) => {
     const count = value === "all" ? counts.all : counts[value];
-    return `<option value="${value}">${escapeHtml(label)} (${count || 0})</option>`;
+    return `<option value="${value}">${escapeHtml(t(label))} (${count || 0})</option>`;
   }).join("");
   els.executionFilter.value = state.executionFilter;
   els.executionFilter.className = `execution-filter status-${state.executionFilter}`;
@@ -820,7 +1016,7 @@ function renderCaseRows() {
       const execStatus = executionStatus(caseItem.id);
       const tags = [
         ...(caseItem.tags || []).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`),
-        marked ? `<span class="tag mark-tag">Mark</span>` : "",
+        marked ? `<span class="tag mark-tag">${t("Mark")}</span>` : "",
       ].join("");
       const description = caseItem.description
         ? `<p class="case-description">${escapeHtml(caseItem.description)}</p>`
@@ -829,18 +1025,18 @@ function renderCaseRows() {
         <article class="case-item${selected ? " selected" : ""}${expanded ? " expanded" : ""} exec-${escapeAttr(execStatus)}" data-case-id="${escapeAttr(caseItem.id)}">
           <div class="case-summary" data-case-summary data-case-id="${escapeAttr(caseItem.id)}">
             <div class="case-toggle-cell">
-              <button class="chevron-button" type="button" data-toggle-case="1" data-case-id="${escapeAttr(caseItem.id)}" aria-expanded="${expanded}" aria-label="${expanded ? "Collapse case details" : "Expand case details"}">
+              <button class="chevron-button" type="button" data-toggle-case="1" data-case-id="${escapeAttr(caseItem.id)}" aria-expanded="${expanded}" aria-label="${t(expanded ? "Collapse case details" : "Expand case details")}">
                 <span class="chevron-icon" aria-hidden="true">›</span>
               </button>
             </div>
             <div class="case-id-cell">
               <button class="case-id copy-case-id" type="button" data-copy-case-id="${escapeAttr(caseItem.id)}"
-                title="Copy case ID" aria-label="Copy case ID ${escapeAttr(caseItem.id)}">${escapeHtml(caseItem.id)}</button>
+                title="${t("Copy case ID")}" aria-label="${escapeAttr(t("Copy case ID {id}", { id: caseItem.id }))}">${escapeHtml(caseItem.id)}</button>
             </div>
             <div class="case-main-cell">
               <div class="case-title-line">
                 <h4 class="case-title">${escapeHtml(caseItem.title)}</h4>
-                ${caseItem.auto ? `<span class="auto-pill">Auto</span>` : ""}
+                ${caseItem.auto ? `<span class="auto-pill">${t("Auto")}</span>` : ""}
               </div>
               ${description}
             </div>
@@ -852,7 +1048,7 @@ function renderCaseRows() {
             <div class="case-plans-cell">${renderCasePlans(caseItem)}</div>
             <div class="case-actions">
               ${state.currentRun ? renderExecutionActions(caseItem.id, execStatus) : ""}
-              ${state.currentRun ? "" : `<button class="text-action" type="button" data-edit-case="1" data-case-id="${escapeAttr(caseItem.id)}">Edit</button>`}
+              ${state.currentRun ? "" : `<button class="text-action" type="button" data-edit-case="1" data-case-id="${escapeAttr(caseItem.id)}">${t("Edit")}</button>`}
             </div>
           </div>
           ${expanded ? renderCaseDetails(caseItem) : ""}
@@ -884,11 +1080,11 @@ function renderCaseDetails(caseItem) {
     <div class="case-details">
       <div class="case-details-card">
         <div class="case-detail-column">
-          ${renderDetailList("Preconditions", caseItem.preconditions, false)}
-          ${renderDetailList("Steps", caseItem.steps, true)}
+          ${renderDetailList(t("Preconditions"), caseItem.preconditions, false)}
+          ${renderDetailList(t("Steps"), caseItem.steps, true)}
         </div>
         <div class="case-detail-column">
-          ${renderDetailList("Expected Results", caseItem.expected_results, false)}
+          ${renderDetailList(t("Expected Results"), caseItem.expected_results, false)}
         </div>
       </div>
       <div class="case-side-panel">
@@ -899,16 +1095,16 @@ function renderCaseDetails(caseItem) {
 
 function renderExecutionActions(caseId, currentStatus) {
   const statuses = [
-    ["passed", "Pass"],
-    ["failed", "Fail"],
-    ["blocked", "Block"],
-    ["deferred", "Defer"],
+    ["passed", t("Pass")],
+    ["failed", t("Fail")],
+    ["blocked", t("Block")],
+    ["deferred", t("Defer")],
   ];
   const disabled = state.currentRun ? "" : " disabled";
   return `
-    <div class="execution-actions" aria-label="Execution status">
-      <select class="execution-select status-${escapeAttr(currentStatus)}" data-exec-select="1" data-case-id="${escapeAttr(caseId)}" aria-label="Execution status"${disabled}>
-        <option value="untested"${currentStatus === "untested" ? " selected" : ""} disabled>Untested</option>
+    <div class="execution-actions" aria-label="${t("Execution status")}">
+      <select class="execution-select status-${escapeAttr(currentStatus)}" data-exec-select="1" data-case-id="${escapeAttr(caseId)}" aria-label="${t("Execution status")}"${disabled}>
+        <option value="untested"${currentStatus === "untested" ? " selected" : ""} disabled>${t("Untested")}</option>
         ${statuses.map(([status, label]) => `
           <option value="${status}"${currentStatus === status ? " selected" : ""}>${label}</option>
         `).join("")}
@@ -923,10 +1119,10 @@ function renderReviewDetails(caseItem) {
     <aside class="review-panel">
       <label class="mark-row">
         <input type="checkbox" data-review-mark="1" data-case-id="${escapeAttr(caseItem.id)}"${marked ? " checked" : ""}>
-        <span>Mark</span>
+        <span>${t("Mark")}</span>
       </label>
-      <textarea data-review-notes="${escapeAttr(caseItem.id)}" rows="5" placeholder="Describe what should be updated">${escapeHtml(mark.notes || "")}</textarea>
-      <button class="outline-button review-save-button" type="button" data-save-review="1" data-case-id="${escapeAttr(caseItem.id)}">Save review</button>
+      <textarea data-review-notes="${escapeAttr(caseItem.id)}" rows="5" placeholder="${t("Describe what should be updated")}">${escapeHtml(mark.notes || "")}</textarea>
+      <button class="outline-button review-save-button" type="button" data-save-review="1" data-case-id="${escapeAttr(caseItem.id)}">${t("Save review")}</button>
     </aside>`;
 }
 
@@ -936,42 +1132,42 @@ function renderExecutionDetails(caseItem) {
   const screenshots = Array.isArray(result.screenshots) ? result.screenshots : [];
   return `
     <section class="detail-section execution-detail-section">
-      <h5>${detailIcon("Execution")}<span>Execution</span></h5>
+      <h5>${detailIcon("Execution")}<span>${t("Execution")}</span></h5>
       <div class="execution-detail-grid">
         <label>
-          <span>Actual Result</span>
-          <textarea data-exec-actual-result="${escapeAttr(caseItem.id)}" rows="3" placeholder="Actual result observed during execution">${escapeHtml(result.actual_result || "")}</textarea>
+          <span>${t("Actual Result")}</span>
+          <textarea data-exec-actual-result="${escapeAttr(caseItem.id)}" rows="3" placeholder="${t("Actual result observed during execution")}">${escapeHtml(result.actual_result || "")}</textarea>
         </label>
         <label>
-          <span>Notes</span>
-          <textarea data-exec-notes="${escapeAttr(caseItem.id)}" rows="3" placeholder="Execution notes">${escapeHtml(result.notes || "")}</textarea>
+          <span>${t("Notes")}</span>
+          <textarea data-exec-notes="${escapeAttr(caseItem.id)}" rows="3" placeholder="${t("Execution notes")}">${escapeHtml(result.notes || "")}</textarea>
         </label>
         <label>
-          <span>Defects</span>
-          <textarea data-exec-defects="${escapeAttr(caseItem.id)}" rows="2" placeholder="Bug links or defect IDs, one per line">${escapeHtml(defects)}</textarea>
+          <span>${t("Defects")}</span>
+          <textarea data-exec-defects="${escapeAttr(caseItem.id)}" rows="2" placeholder="${t("Bug links or defect IDs, one per line")}">${escapeHtml(defects)}</textarea>
         </label>
         <div class="execution-screenshot-field">
-          <span>Screenshots</span>
+          <span>${t("Screenshots")}</span>
           <div class="screenshot-upload-row">
             <input data-exec-screenshot="${escapeAttr(caseItem.id)}" type="file" accept="image/png,image/jpeg,image/gif,image/webp">
-            <button class="outline-button screenshot-upload-button" type="button" data-upload-screenshot="1" data-case-id="${escapeAttr(caseItem.id)}"${state.currentRun ? "" : " disabled"}>Upload screenshot</button>
+            <button class="outline-button screenshot-upload-button" type="button" data-upload-screenshot="1" data-case-id="${escapeAttr(caseItem.id)}"${state.currentRun ? "" : " disabled"}>${t("Upload screenshot")}</button>
           </div>
           ${renderScreenshotList(screenshots)}
         </div>
-        <button class="outline-button execution-save-button" type="button" data-save-execution="1" data-case-id="${escapeAttr(caseItem.id)}"${state.currentRun ? "" : " disabled"}>Save execution</button>
+        <button class="outline-button execution-save-button" type="button" data-save-execution="1" data-case-id="${escapeAttr(caseItem.id)}"${state.currentRun ? "" : " disabled"}>${t("Save execution")}</button>
       </div>
     </section>`;
 }
 
 function renderScreenshotList(screenshots) {
   if (!screenshots.length) {
-    return `<div class="screenshot-list empty">No screenshots</div>`;
+    return `<div class="screenshot-list empty">${t("No screenshots")}</div>`;
   }
   return `
     <div class="screenshot-list">
       ${screenshots.map((screenshot) => {
     const src = screenshotUrl(screenshot);
-    const name = screenshot.name || "Screenshot";
+    const name = screenshot.name || t("Screenshot");
     const screenshotId = screenshot.id || "";
     return `
           <div class="screenshot-thumb-wrap">
@@ -979,7 +1175,7 @@ function renderScreenshotList(screenshots) {
               <img src="${escapeAttr(src)}" alt="${escapeAttr(name)}">
               <span>${escapeHtml(name)}</span>
             </button>
-            <button class="screenshot-delete-button" type="button" data-delete-screenshot="1" data-screenshot-id="${escapeAttr(screenshotId)}" aria-label="Delete screenshot">×</button>
+            <button class="screenshot-delete-button" type="button" data-delete-screenshot="1" data-screenshot-id="${escapeAttr(screenshotId)}" aria-label="${t("Delete screenshot")}">×</button>
           </div>`;
   }).join("")}
     </div>`;
@@ -989,7 +1185,7 @@ function renderDetailList(title, items, ordered) {
   const values = items || [];
   const content = values.length
     ? values.map((item) => `<li>${escapeHtml(item)}</li>`).join("")
-    : `<li class="empty-detail">None</li>`;
+    : `<li class="empty-detail">${t("None")}</li>`;
   const tag = ordered ? "ol" : "ul";
   return `
     <section class="detail-section">
@@ -1093,14 +1289,14 @@ function renderCasePlanAssignment(caseItem) {
     (run) => run.status === "in_progress" && !memberIds.has(run.id),
   );
   els.casePlanSelect.innerHTML = [
-    `<option value="">Select an active plan</option>`,
+    `<option value="">${t("Select an active plan")}</option>`,
     ...available.map((run) => `<option value="${escapeAttr(run.id)}">${escapeHtml(runOptionLabel(run))}</option>`),
   ].join("");
   els.casePlanSelect.disabled = !available.length;
   els.addCaseToPlanButton.disabled = !available.length;
   els.casePlanMembership.textContent = memberships.length
-    ? `Included in: ${memberships.map((run) => run.name || run.id).join(", ")}`
-    : "Not included in a test plan.";
+    ? t("Included in: {plans}", { plans: memberships.map((run) => run.name || run.id).join(", ") })
+    : t("Not included in a test plan.");
 }
 
 async function addCurrentCaseToPlan() {
@@ -1173,7 +1369,7 @@ async function renumberCurrentFile() {
   const message = state.currentRunId
     ? "Update case IDs and synchronize this file with the current test plan? Existing execution results will be retained by case mapping."
     : "Update case IDs using the current YAML order? The case order will not change.";
-  const confirmed = window.confirm(message);
+  const confirmed = window.confirm(t(message));
   if (!confirmed) return;
 
   const filePath = state.currentData.path;
@@ -1318,6 +1514,7 @@ async function completeRun() {
         environment: els.runEnvironmentInput.value.trim() || defaults.environment,
         tester: els.runTesterInput.value.trim() || defaults.tester,
         report_name: reportName,
+        language: state.language,
       }),
     });
     state.currentRun = response;
@@ -1415,7 +1612,7 @@ async function uploadExecutionScreenshot(caseId) {
 
 async function deleteExecutionScreenshot(screenshotId) {
   if (!screenshotId || !state.currentRunId) return;
-  const confirmed = window.confirm("Delete this screenshot?");
+  const confirmed = window.confirm(t("Delete this screenshot?"));
   if (!confirmed) return;
   try {
     const response = await api(`/api/test-runs/${encodeURIComponent(state.currentRunId)}/screenshots/${encodeURIComponent(screenshotId)}`, {
@@ -1438,13 +1635,13 @@ function syncCreateRunButtonState() {
   const hasSource = mode !== "retest_unresolved" || Boolean(els.sourceRunSelect.value);
   els.createRunButton.disabled = !hasName || !hasSource;
   if (!hasName) {
-    els.createRunButton.title = "Enter a test plan name";
+    els.createRunButton.title = t("Enter a test plan name");
   } else if (!hasSource) {
-    els.createRunButton.title = "Select a source test plan";
+    els.createRunButton.title = t("Select a source test plan");
   } else {
     els.createRunButton.title = mode === "retest_unresolved"
-      ? "Create a new plan from the selected plan's failed, blocked, and deferred cases"
-      : "Create a full test plan for the current scope";
+      ? t("Create a new plan from the selected plan's failed, blocked, and deferred cases")
+      : t("Create a full test plan for the current scope");
   }
 }
 
@@ -1514,7 +1711,7 @@ function syncDrawerScrim() {
 }
 
 function scopeLabel() {
-  return (state.summary?.scan_dirs || []).join(", ") || "No scope";
+  return (state.summary?.scan_dirs || []).join(", ") || t("No scope");
 }
 
 function testPlanDefaults() {
@@ -1580,7 +1777,7 @@ function screenshotUrl(screenshot) {
 function openScreenshotViewer(src, title) {
   if (!src) return;
   els.screenshotViewerImage.src = src;
-  els.screenshotViewerTitle.textContent = title || "Screenshot";
+  els.screenshotViewerTitle.textContent = title || t("Screenshot");
   els.screenshotViewer.hidden = false;
 }
 
@@ -1618,7 +1815,7 @@ function fileIcon() {
 }
 
 function detailIcon(title) {
-  if (title === "Preconditions") {
+  if (title === "Preconditions" || title === t("Preconditions")) {
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`;
   }
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`;
@@ -1645,10 +1842,31 @@ function cssEscape(value) {
 }
 
 function showToast(message) {
-  els.toast.textContent = message;
+  els.toast.textContent = localizeRuntimeMessage(message);
   els.toast.hidden = false;
   clearTimeout(showToast.timer);
   showToast.timer = setTimeout(() => {
     els.toast.hidden = true;
   }, 2600);
+}
+
+function localizeRuntimeMessage(message) {
+  const source = String(message || "");
+  const translated = t(source);
+  if (state.language !== "zh-CN" || translated !== source) return translated;
+  const patterns = [
+    [/^Copied (.+)$/, "已复制 $1"],
+    [/^Unable to copy (.+)$/, "无法复制 $1"],
+    [/^Cannot complete test plan: (\d+) untested cases remain$/, "无法完成测试计划：还有 $1 条用例未测试"],
+    [/^Updated (\d+)\/(\d+) case IDs/, "已更新 $1/$2 个用例 ID"],
+    [/^Case IDs are already sequential/, "用例 ID 已连续，无需更新"],
+    [/^Test plan name is required\.$/, "必须填写测试计划名称。"],
+    [/^Unable to generate report: (.+)$/, "无法生成报告：$1"],
+    [/^Case not found: (.+)$/, "未找到用例：$1"],
+    [/^Test run not found: (.+)$/, "未找到测试计划：$1"],
+  ];
+  for (const [pattern, replacement] of patterns) {
+    if (pattern.test(source)) return source.replace(pattern, replacement);
+  }
+  return source;
 }

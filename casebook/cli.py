@@ -263,13 +263,17 @@ def report(
         typer.Option(
             "--project-root", help="Project root. Defaults to the parent of test-runs/ or cwd."),
     ] = None,
+    language: Annotated[
+        str,
+        typer.Option("--language", "-l", help="Report language: en or zh-CN."),
+    ] = "en",
 ) -> None:
     """Generate an HTML report from one test run JSON file."""
     from .report import ReportError, generate_report
 
     try:
         target = generate_report(
-            run_file, output_file=output, project_root=project_root)
+            run_file, output_file=output, project_root=project_root, language=language)
     except ReportError as exc:
         typer.echo(f"casebook report: {exc}", err=True)
         raise typer.Exit(1) from exc
@@ -306,6 +310,10 @@ def export_cases(
             help="Export only cases with this priority. Repeat or use comma-separated values.",
         ),
     ] = None,
+    language: Annotated[
+        str,
+        typer.Option("--language", "-l", help="Export language: en or zh-CN."),
+    ] = "en",
 ) -> None:
     """Export YAML cases to a standalone review HTML file."""
     from .exporter import ExportError, generate_export
@@ -317,6 +325,7 @@ def export_cases(
             tags=tag,
             priorities=priority,
             project_root=Path.cwd(),
+            language=language,
         )
     except ExportError as exc:
         typer.echo(f"casebook export: {exc}", err=True)

@@ -6,6 +6,7 @@ from html import escape
 from pathlib import Path
 from typing import Any
 
+from .i18n import localize_export_html, normalize_language
 from .scanner import CasebookStore, compute_stats, relative_path
 
 
@@ -21,6 +22,7 @@ def generate_export(
     priorities: list[str] | None = None,
     tags: list[str] | None = None,
     project_root: Path | None = None,
+    language: str = "en",
 ) -> Path:
     """Generate a standalone review HTML file from a YAML file or directory."""
     root = (project_root or Path.cwd()).expanduser().resolve()
@@ -35,7 +37,10 @@ def generate_export(
     data = _build_export_data(root, source_path, entries, priority_filters, tag_filters)
     target = _default_output(source_path, output_file)
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(render_export_html(data), encoding="utf-8")
+    target.write_text(
+        localize_export_html(render_export_html(data), normalize_language(language)),
+        encoding="utf-8",
+    )
     return target
 
 

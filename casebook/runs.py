@@ -431,6 +431,7 @@ class TestRunStore:
         name: str,
         filename: str,
         path: str,
+        language: str = "en",
         scope: list[str] | None = None,
     ) -> dict[str, Any]:
         """Add or replace one generated report record on a test plan."""
@@ -447,6 +448,7 @@ class TestRunStore:
                 "name": str(name).strip(),
                 "filename": str(filename).strip(),
                 "path": str(path).strip(),
+                "language": str(language or "en"),
                 "generated_at": self._now(),
             }
             reports = run.get("reports") or []

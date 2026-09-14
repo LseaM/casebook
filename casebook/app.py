@@ -23,6 +23,7 @@ from werkzeug.utils import secure_filename
 
 from . import __version__
 from .editor import CaseEditor, CaseNotFoundError, EditConflictError
+from .i18n import normalize_language
 from .marks import MarksStore
 from .renumber import CaseIdRenumberError, CaseIdRenumberer
 from .report import ReportError, generate_report
@@ -463,6 +464,7 @@ def create_app(
         payload = request.get_json(silent=True) or {}
         report_name = str(payload.get("report_name")
                           or payload.get("reportName") or "").strip()
+        report_language = normalize_language(payload.get("language"))
         try:
             current = runs.get_run(run_id, scope=store.scan_dirs)
             current_run = current.get("run") or {}
@@ -493,6 +495,7 @@ def create_app(
                     run_path,
                     output_file=output_path,
                     project_root=store.project_root,
+                    language=report_language,
                 )
                 generated_report = {
                     "name": report_name,
@@ -505,8 +508,10 @@ def create_app(
                     name=generated_report["name"],
                     filename=generated_report["filename"],
                     path=generated_report["path"],
+                    language=report_language,
                     scope=store.scan_dirs,
                 )
+                generated_report["language"] = report_language
             except (ReportError, OSError) as exc:
                 return jsonify({"error": f"Unable to generate report: {exc}"}), 500
         broker.publish({

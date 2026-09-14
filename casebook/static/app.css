@@ -126,6 +126,23 @@ button {
   min-width: 0;
 }
 
+.language-toggle {
+  min-height: 28px;
+  padding: 0 28px 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.language-toggle:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
 .github-link {
   display: inline-flex;
   align-items: center;
@@ -1847,6 +1864,22 @@ body {
 .github-link:hover {
   background: var(--primary-soft);
   color: var(--primary);
+}
+
+.language-toggle {
+  border-color: var(--line);
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.language-toggle:hover {
+  background: #dceaff;
+  color: #175fcb;
+}
+
+.language-toggle:focus-visible {
+  outline: 3px solid rgba(47, 125, 239, 0.24);
+  outline-offset: 2px;
 }
 
 .app-bar-version {

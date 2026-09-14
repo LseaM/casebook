@@ -7,6 +7,7 @@ from html import escape
 from pathlib import Path
 from typing import Any
 
+from .i18n import localize_report_html, normalize_language
 from .scanner import CasebookStore
 
 
@@ -55,6 +56,7 @@ def generate_report(
     run_file: Path,
     output_file: Path | None = None,
     project_root: Path | None = None,
+    language: str = "en",
 ) -> Path:
     """Generate and write an HTML report for one test run JSON file."""
     run_path = run_file.expanduser().resolve()
@@ -65,7 +67,10 @@ def generate_report(
             if project_root else _infer_project_root(run_path))
     run_data = _load_run_data(run_path)
     report_data = build_report_data(run_data, root)
-    html = render_report_html(report_data)
+    html = localize_report_html(
+        render_report_html(report_data),
+        normalize_language(language),
+    )
 
     target = output_file.expanduser().resolve(
     ) if output_file else run_path.with_suffix(".html")
