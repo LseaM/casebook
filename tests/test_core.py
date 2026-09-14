@@ -420,6 +420,16 @@ class CasebookCoreTests(unittest.TestCase):
             self.assertIn("TC_LOGIN_001", export_html)
             self.assertNotIn("TC_LOGIN_004", export_html)
 
+            zh_export_path = generate_export(
+                project_root / "releases",
+                output_file=project_root / "review-zh.html",
+                project_root=project_root,
+                language="zh-CN",
+            )
+            zh_export_html = zh_export_path.read_text(encoding="utf-8")
+            self.assertIn('<html lang="zh-CN">', zh_export_html)
+            self.assertIn("测试用例评审", zh_export_html)
+
             run_file = project_root / "test-runs" / "run-report.json"
             run_file.parent.mkdir(parents=True, exist_ok=True)
             run_file.write_text(
@@ -516,6 +526,16 @@ class CasebookCoreTests(unittest.TestCase):
             v2_report_html = v2_report_path.read_text(encoding="utf-8")
             self.assertIn("Login title frozen at execution time", v2_report_html)
             self.assertIn("Generated from the v2 snapshot", v2_report_html)
+
+            zh_report_path = generate_report(
+                v2_run_file,
+                output_file=project_root / "report-v2-zh.html",
+                project_root=project_root,
+                language="zh-CN",
+            )
+            zh_report_html = zh_report_path.read_text(encoding="utf-8")
+            self.assertIn('<html lang="zh-CN">', zh_report_html)
+            self.assertIn("测试执行简报", zh_report_html)
 
 
 if __name__ == "__main__":
