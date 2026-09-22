@@ -1,3 +1,4 @@
+// Modified by AITest: add multi-case selection and XMind download controls.
 const SIDEBAR_STORAGE_KEY = "casebook.sidebarWidth";
 const SIDEBAR_MIN_WIDTH = 260;
 const SIDEBAR_MAX_WIDTH = 560;
@@ -14,6 +15,7 @@ const state = {
   currentFile: null,
   currentData: null,
   selectedCaseId: null,
+  exportSelectedKeys: new Set(),
   expandedCaseIds: new Set(),
   dirty: false,
   pendingReload: false,
@@ -84,6 +86,11 @@ function bindElements() {
     "priorityFilters",
     "executionFilter",
     "renumberIdsButton",
+    "selectCurrentFileButton",
+    "clearExportSelectionButton",
+    "exportSelectedXmindButton",
+    "exportAllXmindButton",
+    "xmindAiMark",
     "caseRows",
     "noResults",
     "editorDrawer",
@@ -133,6 +140,13 @@ function bindEvents() {
   els.createRunButton.addEventListener("click", createRun);
   els.completeRunButton.addEventListener("click", completeRun);
   els.renumberIdsButton.addEventListener("click", renumberCurrentFile);
+  els.selectCurrentFileButton.addEventListener("click", selectCurrentFileForExport);
+  els.clearExportSelectionButton.addEventListener("click", () => {
+    state.exportSelectedKeys.clear();
+    renderCaseRows();
+  });
+  els.exportSelectedXmindButton.addEventListener("click", () => downloadXmind(false));
+  els.exportAllXmindButton.addEventListener("click", () => downloadXmind(true));
   els.caseSearch.addEventListener("input", () => {
     state.query = els.caseSearch.value.trim().toLowerCase();
     renderCaseRows();
@@ -150,6 +164,14 @@ function bindEvents() {
     renderCaseRows();
   });
   els.caseRows.addEventListener("change", (event) => {
+    const exportCheckbox = event.target.closest("input[data-export-case]");
+    if (exportCheckbox) {
+      const key = markKey(state.currentData.path, exportCheckbox.dataset.caseId);
+      if (exportCheckbox.checked) state.exportSelectedKeys.add(key);
+      else state.exportSelectedKeys.delete(key);
+      renderExportControls();
+      return;
+    }
     const reviewMarkCheckbox = event.target.closest("input[data-review-mark]");
     if (reviewMarkCheckbox) {
       event.stopPropagation();
@@ -162,6 +184,10 @@ function bindEvents() {
     updateExecutionStatus(executionSelect.dataset.caseId, executionSelect.value);
   });
   els.caseRows.addEventListener("click", (event) => {
+    if (event.target.closest("input[data-export-case]")) {
+      event.stopPropagation();
+      return;
+    }
     const copyCaseIdButton = event.target.closest("button[data-copy-case-id]");
     if (copyCaseIdButton) {
       event.stopPropagation();
@@ -492,6 +518,7 @@ async function loadFile(filePath, options = {}) {
   renderFileMeta();
   renderFilters();
   renderCaseRows();
+  renderExportControls();
   markActiveTreeItem();
   if (options.keepDrawer && state.selectedCaseId) {
     const selected = findCase(state.selectedCaseId);
@@ -819,6 +846,7 @@ function renderCaseRows() {
               </button>
             </div>
             <div class="case-id-cell">
+              <input type="checkbox" data-export-case="1" data-case-id="${escapeAttr(caseItem.id)}" aria-label="Select ${escapeAttr(caseItem.id)} for XMind export"${state.exportSelectedKeys.has(key) ? " checked" : ""}>
               <button class="case-id copy-case-id" type="button" data-copy-case-id="${escapeAttr(caseItem.id)}"
                 title="Copy case ID" aria-label="Copy case ID ${escapeAttr(caseItem.id)}">${escapeHtml(caseItem.id)}</button>
             </div>
@@ -845,6 +873,50 @@ function renderCaseRows() {
     });
   els.caseRows.innerHTML = rows.join("");
   els.noResults.hidden = rows.length > 0;
+  renderExportControls();
+}
+
+function renderExportControls() {
+  els.exportSelectedXmindButton.textContent = `Export selected XMind (${state.exportSelectedKeys.size})`;
+  els.exportSelectedXmindButton.disabled = state.exportSelectedKeys.size === 0;
+  els.exportAllXmindButton.disabled = !(state.summary?.cases > 0);
+  els.clearExportSelectionButton.disabled = state.exportSelectedKeys.size === 0;
+}
+
+function selectCurrentFileForExport() {
+  if (!state.currentData) return;
+  state.currentData.cases.forEach((caseItem) => state.exportSelectedKeys.add(markKey(state.currentData.path, caseItem.id)));
+  renderCaseRows();
+}
+
+async function downloadXmind(all) {
+  const cases = [...state.exportSelectedKeys].map((key) => {
+    const separator = key.lastIndexOf("#");
+    return { file_path: key.slice(0, separator), case_id: key.slice(separator + 1) };
+  });
+  if (!all && !cases.length) return;
+  try {
+    const response = await fetch("/api/export/xmind", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(all ? { all: true, mark_ai: els.xmindAiMark.checked } : { cases, mark_ai: els.xmindAiMark.checked }),
+    });
+    if (!response.ok) {
+      const data = await response.json().catch(() => ({}));
+      throw new Error(data.error || "XMind export failed");
+    }
+    const url = URL.createObjectURL(await response.blob());
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "casebook-cases.xmind";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast("XMind file downloaded");
+  } catch (error) {
+    showToast(error.message);
+  }
 }
 
 function plansForCase(caseItem) {

@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- Modified by AITest: add XMind export controls to the review page. -->
 <html lang="en">
 
 <head>
@@ -122,6 +123,13 @@
             <div class="case-list-controls">
               <div class="card-actions case-card-actions">
                 <button class="outline-button renumber-button" id="renumberIdsButton" type="button">ID sorting</button>
+                <div class="xmind-export-tools">
+                  <button class="outline-button" id="selectCurrentFileButton" type="button">Select file</button>
+                  <button class="outline-button" id="clearExportSelectionButton" type="button">Clear</button>
+                  <button class="outline-button" id="exportSelectedXmindButton" type="button" disabled>Export selected XMind (0)</button>
+                  <button class="outline-button" id="exportAllXmindButton" type="button">Export all XMind</button>
+                  <label class="xmind-ai-label"><input id="xmindAiMark" type="checkbox" checked> Mark AI</label>
+                </div>
                 <div class="case-list-tools">
                   <div class="filter-group" id="priorityFilters"></div>
                   <select id="executionFilter" class="execution-filter" aria-label="Execution result filter"

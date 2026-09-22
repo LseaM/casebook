@@ -1,3 +1,4 @@
+/* Modified by AITest: style XMind export controls and case selection. */
 :root {
   color-scheme: light;
   --app-bar: #212832;
@@ -3284,6 +3285,33 @@ body.sidebar-collapsed .app-shell {
 
 .case-plan-empty {
   color: #a5b2c5;
+}
+
+/* AITest: keep export selection separate from the editor's selected case. */
+.xmind-export-tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.xmind-ai-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.case-id-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.case-id-cell input[data-export-case] {
+  flex: none;
+  cursor: pointer;
 }
 
 .case-plan-assignment {

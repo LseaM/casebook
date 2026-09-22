@@ -274,3 +274,4 @@ README 只保留产品理念和快速旅程，完整教程放在独立文档中�
 - [测试计划与用例执行](./docs/casebook-instructions.md#测试计划与用例执行)
 - [项目状态文件](./docs/casebook-instructions.md#项目状态文件)
 - [HTML 测试报告](./docs/casebook-instructions.md#html-测试报告)
+- [XMind handoff (AITest modification)](./docs/xmind-export.md)

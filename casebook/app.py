@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+# Modified by AITest: add a scoped XMind handoff endpoint.
+
 import atexit
+import io
 import json
 import queue
 import uuid
@@ -14,6 +17,7 @@ from flask import (
     jsonify,
     render_template,
     request,
+    send_file,
     send_from_directory,
     stream_with_context,
     url_for,
@@ -29,6 +33,7 @@ from .report import ReportError, generate_report
 from .runs import InvalidRunError, RunNotFoundError, TestRunStore
 from .scanner import CasebookStore
 from .watcher import CasebookWatcher
+from .xmind_exporter import XMindExportError, build_xmind, collect_cases
 
 SCREENSHOT_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".webp"}
 SCREENSHOT_MIME_TYPES = {
@@ -229,6 +234,29 @@ def create_app(
     @app.get("/api/files")
     def api_files() -> ResponseReturnValue:
         return jsonify(store.list_files())
+
+    @app.post("/api/export/xmind")
+    def api_export_xmind() -> ResponseReturnValue:
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict) or type(payload.get("mark_ai", False)) is not bool:
+            return jsonify({"error": "Invalid XMind export request"}), 400
+        export_all = payload.get("all") is True
+        if ("all" in payload and type(payload["all"]) is not bool) or (export_all and "cases" in payload):
+            return jsonify({"error": "Choose all cases or an explicit selection"}), 400
+        if not export_all and "cases" not in payload:
+            return jsonify({"error": "Choose cases to export"}), 400
+        try:
+            store.refresh()
+            selected = collect_cases(store, None if export_all else payload["cases"])
+            content = build_xmind(selected, mark_ai=payload.get("mark_ai", False))
+        except (XMindExportError, OSError, ValueError) as exc:
+            return jsonify({"error": str(exc)}), 400
+        return send_file(
+            io.BytesIO(content),
+            mimetype="application/vnd.xmind.workbook",
+            as_attachment=True,
+            download_name="casebook-cases.xmind",
+        )
 
     @app.get("/api/files/<path:file_path>")
     def api_file(file_path: str) -> ResponseReturnValue:
