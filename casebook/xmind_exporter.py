@@ -1,6 +1,6 @@
 """Create an editable XMind handoff from cases in the active Casebook scope.
 
-Modified by AITest: add XMind export and guard AITest canonical projections.
+Modified by AITest: add XMind export and guard canonical projections.
 """
 
 from __future__ import annotations
@@ -26,6 +26,23 @@ class XMindExportError(ValueError):
 
 def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _projection_sha256(module: Any, feature: Any, cases: Any) -> str:
+    payload = {"module": module, "feature": feature, "test_cases": cases}
+    encoded = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _sdd_tags(raw_tags: list[str]) -> dict[str, str]:
+    values: dict[str, str] = {}
+    for tag in raw_tags:
+        key, separator, value = str(tag).partition(":")
+        if separator and key in {"canonical-path", "canonical-sha256", "projection-sha256", "case-set"}:
+            if key in values:
+                raise XMindExportError(f"duplicate SDD binding tag: {key}")
+            values[key] = value
+    return values
 
 
 def _tag_values(tags: list[str]) -> dict[str, str]:
@@ -97,6 +114,42 @@ def validate_aitest_projection(project_root: Path, file_path: str) -> None:
             raise XMindExportError(f"Casebook {field} differs from formal cases: {file_path}")
 
 
+def validate_sdd_projection(project_root: Path, file_path: str) -> None:
+    """Check SDD's canonical source hash and the exact exported review content."""
+    source_root = project_root.resolve().parent
+    if not (source_root / "schemas" / "case-set.schema.json").exists():
+        return
+    projected_path = resolve_project_path(project_root, file_path)
+    yaml = YAML(typ="safe")
+    try:
+        projected = yaml.load(projected_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, ValueError, YAMLError) as exc:
+        raise XMindExportError(f"cannot read SDD Casebook projection: {file_path}") from exc
+    if not isinstance(projected, dict) or not isinstance(projected.get("metadata"), dict):
+        raise XMindExportError(f"invalid SDD Casebook projection: {file_path}")
+    metadata = projected["metadata"]
+    raw_tags = metadata.get("tags")
+    if not isinstance(raw_tags, list):
+        raise XMindExportError(f"SDD source binding is missing: {file_path}")
+    tags = _sdd_tags(raw_tags)
+    required = {"canonical-path", "canonical-sha256", "projection-sha256", "case-set"}
+    if not required.issubset(tags):
+        raise XMindExportError(f"incomplete SDD source binding: {file_path}; regenerate the Casebook projection")
+    canonical = _bound_path(source_root, tags["canonical-path"], "canonical")
+    if not canonical.is_relative_to(source_root / "generated-cases"):
+        raise XMindExportError(f"SDD canonical path is outside generated-cases: {file_path}")
+    try:
+        if _sha256(canonical) != tags["canonical-sha256"]:
+            raise XMindExportError(f"formal SDD cases changed after Casebook export: {file_path}")
+        formal = yaml.load(canonical.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, ValueError, YAMLError) as exc:
+        raise XMindExportError(f"cannot validate SDD canonical source: {file_path}") from exc
+    if not isinstance(formal, dict) or formal.get("case_set_id") != tags["case-set"]:
+        raise XMindExportError(f"SDD Case Set identity differs from projection: {file_path}")
+    if _projection_sha256(metadata.get("module"), metadata.get("feature"), projected.get("test_cases")) != tags["projection-sha256"]:
+        raise XMindExportError(f"SDD Casebook review copy was edited after projection: {file_path}")
+
+
 def collect_cases(store: CasebookStore, selection: list[dict[str, str]] | None) -> list[dict[str, Any]]:
     """Resolve explicit file/ID pairs or the complete scanned scope."""
     files = store.list_files()
@@ -133,6 +186,7 @@ def collect_cases(store: CasebookStore, selection: list[dict[str, str]] | None) 
         raise XMindExportError("there are no cases to export")
     for file_path in {item["file_path"] for item in chosen}:
         validate_aitest_projection(store.project_root, file_path)
+        validate_sdd_projection(store.project_root, file_path)
     return chosen
 
 
@@ -145,6 +199,10 @@ def _topic(title: str, children: list[dict[str, Any]] | None = None) -> dict[str
 
 def _case_topic(case: dict[str, Any], mark_ai: bool) -> dict[str, Any]:
     prefix = "[AI]" if mark_ai else ""
+    canonical_ids = [str(tag).partition(":")[2] for tag in case.get("tags", []) if str(tag).startswith("canonical-id:")]
+    if len(canonical_ids) > 1:
+        raise XMindExportError(f"duplicate canonical ID tag: {case['id']}")
+    case_id = canonical_ids[0] if canonical_ids else case["id"]
     children = []
     if case.get("description"):
         children.append(_topic(f"说明：{case['description']}"))
@@ -153,7 +211,7 @@ def _case_topic(case: dict[str, Any], mark_ai: bool) -> dict[str, Any]:
         values = case.get(key) or []
         if values:
             children.append(_topic(title, [_topic(f"{index}. {value}") for index, value in enumerate(values, 1)]))
-    return _topic(f"{prefix}[{case['id']}] {case['title']}", children)
+    return _topic(f"{prefix}[{case_id}] {case['title']}", children)
 
 
 def build_xmind(cases: list[dict[str, Any]], mark_ai: bool = False) -> bytes:

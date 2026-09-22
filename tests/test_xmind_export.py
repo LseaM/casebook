@@ -121,6 +121,45 @@ class XMindExportTests(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("binding is missing", response.get_json()["error"])
 
+    def test_sdd_projection_uses_canonical_id_and_rejects_stale_content(self) -> None:
+        source_root = self.root / "sdd"
+        workspace = source_root / "casebook-workspace"
+        (source_root / "schemas").mkdir(parents=True)
+        (source_root / "schemas" / "case-set.schema.json").write_text("{}", encoding="utf-8")
+        formal = source_root / "generated-cases" / "login" / "cases.yaml"
+        formal.parent.mkdir(parents=True)
+        formal.write_text("case_set_id: CASESET-LOGIN\ncases: []\n", encoding="utf-8")
+        projection = workspace / "releases" / "login" / "cases.yaml"
+        projection.parent.mkdir(parents=True)
+        data = YAML(typ="safe").load(self.source.read_text(encoding="utf-8"))
+        data["test_cases"][0]["tags"] = ["canonical-id:TC-LOGIN-000001"]
+        checksum_payload = {"module": data["metadata"]["module"], "feature": data["metadata"]["feature"], "test_cases": data["test_cases"]}
+        checksum = hashlib.sha256(json.dumps(checksum_payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+        data["metadata"]["tags"] = [
+            "canonical-path:generated-cases/login/cases.yaml",
+            f"canonical-sha256:{hashlib.sha256(formal.read_bytes()).hexdigest()}",
+            "case-set:CASESET-LOGIN",
+            f"projection-sha256:{checksum}",
+        ]
+        yaml = YAML()
+        with projection.open("w", encoding="utf-8") as handle:
+            yaml.dump(data, handle)
+        client = create_app(workspace, ["releases/login"], watch=False).test_client()
+        exported = client.post("/api/export/xmind", json={"all": True, "mark_ai": True})
+        self.assertEqual(exported.status_code, 200)
+        self.assertIn("[AI][TC-LOGIN-000001]", exported_titles(exported.data)[0])
+
+        data["test_cases"][0]["title"] = "edited in review page"
+        with projection.open("w", encoding="utf-8") as handle:
+            yaml.dump(data, handle)
+        self.assertEqual(client.post("/api/export/xmind", json={"all": True}).status_code, 400)
+
+        data["test_cases"][0]["title"] = "正确凭据登录"
+        with projection.open("w", encoding="utf-8") as handle:
+            yaml.dump(data, handle)
+        formal.write_text("case_set_id: CASESET-LOGIN\ncases: [edited]\n", encoding="utf-8")
+        self.assertEqual(client.post("/api/export/xmind", json={"all": True}).status_code, 400)
+
 
 if __name__ == "__main__":
     unittest.main()
