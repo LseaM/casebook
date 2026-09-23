@@ -49,7 +49,7 @@ test_cases:
     auto: false
 ```
 
-Allowed case fields are `id`, `title`, `description`, `priority`, `type`, `preconditions`, `steps`, `expected_results`, `tags`, and `auto`. Do not invent extra fields.
+Allowed case fields are `id`, `title`, `description`, `test_data`, `cleanup`, `priority`, `type`, `preconditions`, `steps`, `expected_results`, `tags`, `traceability`, and `auto`. `test_data` is structured setup/input data and `cleanup` is a list of cleanup actions; both render in the expanded case details. `traceability` is reserved for governed adapters and should not be authored without a defined upstream binding. Do not invent extra fields.
 
 Allowed `priority` values are `P0`, `P1`, and `P2`.
 

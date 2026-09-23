@@ -219,7 +219,7 @@ def render_export_html(data: dict[str, Any]) -> str:
     .case-table-head,
     .case-summary {{
       display: grid;
-      grid-template-columns: 24px minmax(128px, 170px) minmax(280px, 1fr) 86px 92px minmax(180px, .7fr) minmax(128px, 148px);
+      grid-template-columns: 24px minmax(128px, 170px) minmax(280px, 1fr) 86px 92px minmax(140px, .6fr) minmax(120px, .5fr) minmax(128px, 148px);
       gap: 12px;
       align-items: flex-start;
     }}
@@ -246,10 +246,11 @@ def render_export_html(data: dict[str, Any]) -> str:
     }}
     .case-summary:hover {{ background: #fbfcfe; }}
     .case-main-cell,
-    .case-tags-cell {{ min-width: 0; }}
+    .case-tags-cell, .case-traceability-cell {{ min-width: 0; }}
     .case-id-cell,
     .case-priority-cell,
     .case-type-cell,
+    .case-traceability-cell,
     .case-tags-cell,
     .case-actions-cell {{ padding-top: 2px; }}
     .toggle {{
@@ -612,7 +613,7 @@ def render_export_html(data: dict[str, Any]) -> str:
     @media (max-width: 1280px) {{
       .case-table-head,
       .case-summary {{
-        grid-template-columns: 24px minmax(120px, 150px) minmax(240px, 1fr) 76px 84px minmax(150px, .6fr) minmax(128px, 140px);
+        grid-template-columns: 24px minmax(120px, 150px) minmax(240px, 1fr) 76px 84px minmax(120px, .6fr) minmax(120px, .5fr) minmax(128px, 140px);
         gap: 10px;
       }}
     }}
@@ -631,6 +632,7 @@ def render_export_html(data: dict[str, Any]) -> str:
       .case-main-cell,
       .case-priority-cell,
       .case-type-cell,
+      .case-traceability-cell,
       .case-tags-cell,
       .case-actions-cell {{ grid-column: 2; justify-content: flex-start; }}
       .case-body {{ padding-left: 16px; }}
@@ -807,6 +809,7 @@ def render_export_html(data: dict[str, Any]) -> str:
             <span>Title</span>
             <span>Priority</span>
             <span>Type</span>
+            <span>Traceability</span>
             <span>Tags</span>
             <span>Actions</span>
           </div>
@@ -823,6 +826,15 @@ def render_export_html(data: dict[str, Any]) -> str:
         ...caseItem.tags.map((tag) => `<span class="tag">${{escapeHtml(tag)}}</span>`),
         marked ? '<span class="tag mark-tag">Mark</span>' : "",
       ].join("");
+      const trace = caseItem.traceability;
+      const requirements = trace?.requirement_refs || [];
+      const testPoints = trace?.coverage_refs || [];
+      const traceSummary = trace
+        ? `<span title="${{escapeAttr([...requirements, ...testPoints].join(" · "))}}">REQ ${{escapeHtml(requirements[0] || "—")}}${{requirements.length > 1 ? ` +${{requirements.length - 1}}` : ""}}<br>TP ${{escapeHtml(testPoints[0] || "—")}}${{testPoints.length > 1 ? ` +${{testPoints.length - 1}}` : ""}}</span>`
+        : "—";
+      const testDataItems = Object.entries(caseItem.test_data || {{}}).map(([name, value]) =>
+        `${{name === "fixture_or_input" ? "Input" : name.replaceAll("_", " ")}}: ${{typeof value === "string" ? value : JSON.stringify(value)}}`
+      );
       return `
         <article class="case-card ${{open ? "open" : ""}}" data-case-key="${{escapeAttr(key)}}">
           <button class="case-summary" type="button" data-case-summary data-case-key="${{escapeAttr(key)}}">
@@ -833,20 +845,30 @@ def render_export_html(data: dict[str, Any]) -> str:
                 <span class="case-title">${{escapeHtml(caseItem.title)}}</span>
                 ${{caseItem.auto ? '<span class="auto-pill">Auto</span>' : ""}}
               </span>
-              ${{caseItem.description ? `<span class="case-description">${{escapeHtml(caseItem.description)}}</span>` : ""}}
+              ${{open && caseItem.description ? `<span class="case-description">${{escapeHtml(caseItem.description)}}</span>` : ""}}
             </span>
             <span class="case-priority-cell">
               <span class="badge priority-${{escapeAttr(caseItem.priority.toLowerCase())}}">${{escapeHtml(caseItem.priority)}}</span>
             </span>
             <span class="case-type-cell">${{escapeHtml(caseItem.type)}}</span>
+            <span class="case-traceability-cell">${{traceSummary}}</span>
             <span class="case-tags-cell"><span class="tag-list">${{tags}}</span></span>
             <span class="case-actions-cell"><span class="case-action-text">Review</span></span>
           </button>
           <div class="case-body">
             <div class="detail-grid">
               <div class="case-detail-column">
+                ${{testDataItems.length ? detailList("Test Data", testDataItems, false) : ""}}
                 ${{detailList("Preconditions", caseItem.preconditions, false)}}
                 ${{detailList("Steps", caseItem.steps, true)}}
+                ${{(caseItem.cleanup || []).length ? detailList("Cleanup", caseItem.cleanup, false) : ""}}
+                ${{trace ? detailList("Traceability", [
+                  `Canonical ID: ${{trace.canonical_id}} · Revision: ${{trace.revision}}`,
+                  `Case Set: ${{trace.case_set_id}}`,
+                  `Requirements: ${{requirements.join(", ")}}`,
+                  `Test points: ${{testPoints.join(", ")}}`,
+                  ...(trace.assertions || []).map((item) => `Assertion ${{item.assertion_id}}: step ${{item.step_no}}, ${{item.assertion_type}}`),
+                ], false) : ""}}
               </div>
               <div class="case-detail-column">
                 ${{detailList("Expected Results", caseItem.expected_results, false)}}

@@ -34,17 +34,6 @@ def _projection_sha256(module: Any, feature: Any, cases: Any) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
-def _sdd_tags(raw_tags: list[str]) -> dict[str, str]:
-    values: dict[str, str] = {}
-    for tag in raw_tags:
-        key, separator, value = str(tag).partition(":")
-        if separator and key in {"canonical-path", "canonical-sha256", "projection-sha256", "case-set"}:
-            if key in values:
-                raise XMindExportError(f"duplicate SDD binding tag: {key}")
-            values[key] = value
-    return values
-
-
 def _tag_values(tags: list[str]) -> dict[str, str]:
     values: dict[str, str] = {}
     for tag in tags:
@@ -128,25 +117,24 @@ def validate_sdd_projection(project_root: Path, file_path: str) -> None:
     if not isinstance(projected, dict) or not isinstance(projected.get("metadata"), dict):
         raise XMindExportError(f"invalid SDD Casebook projection: {file_path}")
     metadata = projected["metadata"]
-    raw_tags = metadata.get("tags")
-    if not isinstance(raw_tags, list):
-        raise XMindExportError(f"SDD source binding is missing: {file_path}")
-    tags = _sdd_tags(raw_tags)
-    required = {"canonical-path", "canonical-sha256", "projection-sha256", "case-set"}
-    if not required.issubset(tags):
+    binding = metadata.get("source_binding")
+    if not isinstance(binding, dict):
+        raise XMindExportError(f"SDD source binding is missing: {file_path}; regenerate the Casebook projection")
+    required = {"canonical_path", "canonical_sha256", "projection_sha256", "case_set_id"}
+    if not required.issubset(binding):
         raise XMindExportError(f"incomplete SDD source binding: {file_path}; regenerate the Casebook projection")
-    canonical = _bound_path(source_root, tags["canonical-path"], "canonical")
+    canonical = _bound_path(source_root, binding["canonical_path"], "canonical")
     if not canonical.is_relative_to(source_root / "generated-cases"):
         raise XMindExportError(f"SDD canonical path is outside generated-cases: {file_path}")
     try:
-        if _sha256(canonical) != tags["canonical-sha256"]:
+        if _sha256(canonical) != binding["canonical_sha256"]:
             raise XMindExportError(f"formal SDD cases changed after Casebook export: {file_path}")
         formal = yaml.load(canonical.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, ValueError, YAMLError) as exc:
         raise XMindExportError(f"cannot validate SDD canonical source: {file_path}") from exc
-    if not isinstance(formal, dict) or formal.get("case_set_id") != tags["case-set"]:
+    if not isinstance(formal, dict) or formal.get("case_set_id") != binding["case_set_id"]:
         raise XMindExportError(f"SDD Case Set identity differs from projection: {file_path}")
-    if _projection_sha256(metadata.get("module"), metadata.get("feature"), projected.get("test_cases")) != tags["projection-sha256"]:
+    if _projection_sha256(metadata.get("module"), metadata.get("feature"), projected.get("test_cases")) != binding["projection_sha256"]:
         raise XMindExportError(f"SDD Casebook review copy was edited after projection: {file_path}")
 
 
@@ -199,18 +187,31 @@ def _topic(title: str, children: list[dict[str, Any]] | None = None) -> dict[str
 
 def _case_topic(case: dict[str, Any], mark_ai: bool) -> dict[str, Any]:
     prefix = "[AI]" if mark_ai else ""
+    traceability = case.get("traceability") or {}
     canonical_ids = [str(tag).partition(":")[2] for tag in case.get("tags", []) if str(tag).startswith("canonical-id:")]
     if len(canonical_ids) > 1:
         raise XMindExportError(f"duplicate canonical ID tag: {case['id']}")
-    case_id = canonical_ids[0] if canonical_ids else case["id"]
+    case_id = traceability.get("canonical_id") or (canonical_ids[0] if canonical_ids else case["id"])
     children = []
     if case.get("description"):
         children.append(_topic(f"说明：{case['description']}"))
     children.append(_topic(f"优先级：{case['priority']}｜类型：{case['type']}"))
+    test_data = case.get("test_data") or {}
+    if test_data:
+        children.append(_topic("测试数据", [
+            _topic(
+                f"{'Input' if key == 'fixture_or_input' else key.replace('_', ' ')}: "
+                f"{value if isinstance(value, str) else json.dumps(value, ensure_ascii=False, sort_keys=True)}"
+            )
+            for key, value in test_data.items()
+        ]))
     for key, title in (("preconditions", "前置条件"), ("steps", "操作步骤"), ("expected_results", "预期结果")):
         values = case.get(key) or []
         if values:
             children.append(_topic(title, [_topic(f"{index}. {value}") for index, value in enumerate(values, 1)]))
+    cleanup = case.get("cleanup") or []
+    if cleanup:
+        children.append(_topic("清理动作", [_topic(f"{index}. {value}") for index, value in enumerate(cleanup, 1)]))
     return _topic(f"{prefix}[{case_id}] {case['title']}", children)
 
 

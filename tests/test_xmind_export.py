@@ -132,15 +132,19 @@ class XMindExportTests(unittest.TestCase):
         projection = workspace / "releases" / "login" / "cases.yaml"
         projection.parent.mkdir(parents=True)
         data = YAML(typ="safe").load(self.source.read_text(encoding="utf-8"))
-        data["test_cases"][0]["tags"] = ["canonical-id:TC-LOGIN-000001"]
+        data["test_cases"][0]["traceability"] = {
+            "canonical_id": "TC-LOGIN-000001", "revision": 1, "case_set_id": "CASESET-LOGIN",
+            "requirement_refs": ["LOGIN-R-0001"], "coverage_refs": ["COV-LOGIN-001"],
+            "evidence_refs": {"rule_ids": ["LOGIN-R-0001"]},
+        }
         checksum_payload = {"module": data["metadata"]["module"], "feature": data["metadata"]["feature"], "test_cases": data["test_cases"]}
         checksum = hashlib.sha256(json.dumps(checksum_payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
-        data["metadata"]["tags"] = [
-            "canonical-path:generated-cases/login/cases.yaml",
-            f"canonical-sha256:{hashlib.sha256(formal.read_bytes()).hexdigest()}",
-            "case-set:CASESET-LOGIN",
-            f"projection-sha256:{checksum}",
-        ]
+        data["metadata"]["source_binding"] = {
+            "canonical_path": "generated-cases/login/cases.yaml",
+            "canonical_sha256": hashlib.sha256(formal.read_bytes()).hexdigest(),
+            "case_set_id": "CASESET-LOGIN",
+            "projection_sha256": checksum,
+        }
         yaml = YAML()
         with projection.open("w", encoding="utf-8") as handle:
             yaml.dump(data, handle)

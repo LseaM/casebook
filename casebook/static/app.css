@@ -3414,3 +3414,66 @@ body.sidebar-collapsed .app-shell {
     align-self: stretch;
   }
 }
+
+/* Keep requirement links separate from user tags in the case list. */
+.case-table-head,
+.case-summary {
+  grid-template-columns:
+    24px minmax(120px, 150px) minmax(270px, 2fr) minmax(62px, 0.34fr)
+    minmax(76px, 0.4fr) minmax(112px, 0.62fr) minmax(80px, 0.42fr)
+    minmax(100px, 0.55fr) minmax(70px, 0.38fr);
+}
+
+.case-traceability-cell {
+  min-width: 0;
+  padding-top: 2px;
+}
+
+.traceability-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.traceability-summary span {
+  border-radius: 4px;
+  background: var(--primary-soft);
+  padding: 2px 5px;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.traceability-summary b { margin-right: 3px; }
+
+@container case-list-card (max-width: 980px) {
+  .case-table-head { display: none; }
+  .case-summary { grid-template-columns: 24px minmax(120px, 150px) minmax(0, 1fr) minmax(96px, 124px); }
+  .case-toggle-cell { grid-column: 1; grid-row: 1; }
+  .case-id-cell { grid-column: 2; grid-row: 1; }
+  .case-main-cell { grid-column: 3; grid-row: 1; }
+  .case-actions { grid-column: 4; grid-row: 1; }
+  .case-priority-cell { grid-column: 3; grid-row: 2; }
+  .case-type-cell { grid-column: 4; grid-row: 2; }
+  .case-traceability-cell { grid-column: 3 / 5; grid-row: 3; }
+  .case-tags-cell { grid-column: 3 / 5; grid-row: 4; }
+  .case-plans-cell { grid-column: 3 / 5; grid-row: 5; }
+}
+
+@container case-list-card (max-width: 640px) {
+  .case-summary { grid-template-columns: 24px minmax(0, 1fr) auto; }
+  .case-toggle-cell { grid-column: 1; grid-row: 1; }
+  .case-id-cell { grid-column: 2; grid-row: 1; }
+  .case-main-cell { grid-column: 2 / 4; grid-row: 2; }
+  .case-actions { grid-column: 3; grid-row: 1; }
+  .case-priority-cell { grid-column: 2; grid-row: 3; }
+  .case-type-cell { grid-column: 3; grid-row: 3; }
+  .case-traceability-cell { grid-column: 2 / 4; grid-row: 4; }
+  .case-tags-cell { grid-column: 2 / 4; grid-row: 5; }
+  .case-plans-cell { grid-column: 2 / 4; grid-row: 6; }
+}

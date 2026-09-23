@@ -38,6 +38,67 @@
             "type": "string"
           },
           "description": "File-level tags"
+        },
+        "source_binding": {
+          "type": "object",
+          "required": [
+            "canonical_path",
+            "canonical_sha256",
+            "projection_sha256",
+            "case_set_id",
+            "scope_id",
+            "input_mode",
+            "review_date_sentinel"
+          ],
+          "properties": {
+            "canonical_path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "canonical_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "projection_sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "case_set_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "scope_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "input_mode": {
+              "type": "string",
+              "enum": [
+                "standalone",
+                "hiwiki"
+              ]
+            },
+            "review_date_sentinel": {
+              "type": "boolean"
+            },
+            "spec_sha256": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            },
+            "knowledge_delivery": {
+              "type": "string",
+              "minLength": 1
+            },
+            "knowledge_commit": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false,
+          "description": "Machine binding for a derived Case Set; not a user tag"
         }
       },
       "additionalProperties": false
@@ -128,6 +189,173 @@
             "type": "boolean",
             "default": false,
             "description": "Whether the case is planned for automation (default false)"
+          },
+          "traceability": {
+            "type": "object",
+            "required": [
+              "canonical_id",
+              "revision",
+              "case_set_id",
+              "requirement_refs",
+              "coverage_refs",
+              "evidence_refs",
+              "assertions"
+            ],
+            "properties": {
+              "canonical_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "case_set_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "requirement_refs": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "coverage_refs": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "evidence_refs": {
+                "type": "object",
+                "properties": {
+                  "rule_ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "change_refs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "contract_refs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "policy_refs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "metric_refs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                },
+                "additionalProperties": false
+              },
+              "assertions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "assertion_id",
+                    "step_no",
+                    "assertion_type",
+                    "evidence_refs"
+                  ],
+                  "properties": {
+                    "assertion_id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "step_no": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "assertion_type": {
+                      "type": "string",
+                      "enum": [
+                        "business",
+                        "technical"
+                      ]
+                    },
+                    "evidence_refs": {
+                      "type": "object",
+                      "properties": {
+                        "rule_ids": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        },
+                        "change_refs": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        },
+                        "contract_refs": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        },
+                        "policy_refs": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        },
+                        "metric_refs": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "description": "Assertion identities and evidence kept out of expected result display text"
+              }
+            },
+            "additionalProperties": false,
+            "description": "Canonical identity and requirement coverage for a derived case; not a user tag"
+          },
+          "test_data": {
+            "type": "object",
+            "description": "Structured test data shown in the expanded case details"
+          },
+          "cleanup": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Cleanup actions shown in the expanded case details"
           }
         },
         "additionalProperties": false

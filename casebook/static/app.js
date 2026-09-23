@@ -834,7 +834,15 @@ function renderCaseRows() {
         ...(caseItem.tags || []).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`),
         marked ? `<span class="tag mark-tag">Mark</span>` : "",
       ].join("");
-      const description = caseItem.description
+      const trace = caseItem.traceability;
+      const requirements = trace?.requirement_refs || [];
+      const testPoints = trace?.coverage_refs || [];
+      const traceability = trace ? `
+        <div class="traceability-summary" title="${escapeAttr([...requirements, ...testPoints].join(" · "))}">
+          <span><b>REQ</b> ${escapeHtml(requirements[0] || "—")}${requirements.length > 1 ? ` +${requirements.length - 1}` : ""}</span>
+          <span><b>TP</b> ${escapeHtml(testPoints[0] || "—")}${testPoints.length > 1 ? ` +${testPoints.length - 1}` : ""}</span>
+        </div>` : `<span class="case-plan-empty">—</span>`;
+      const description = expanded && caseItem.description
         ? `<p class="case-description">${escapeHtml(caseItem.description)}</p>`
         : "";
       return `
@@ -861,6 +869,7 @@ function renderCaseRows() {
               <span class="badge priority-${escapeAttr(caseItem.priority).toLowerCase()}">${escapeHtml(caseItem.priority)}</span>
             </div>
             <div class="case-type-cell">${escapeHtml(caseItem.type)}</div>
+            <div class="case-traceability-cell">${traceability}</div>
             <div class="case-tags-cell"><div class="tag-list">${tags}</div></div>
             <div class="case-plans-cell">${renderCasePlans(caseItem)}</div>
             <div class="case-actions">
@@ -937,12 +946,35 @@ function renderCasePlans(caseItem) {
 }
 
 function renderCaseDetails(caseItem) {
+  const trace = caseItem.traceability;
+  const testDataItems = Object.entries(caseItem.test_data || {}).map(([key, value]) =>
+    `${key === "fixture_or_input" ? "Input" : key.replaceAll("_", " ")}: ${typeof value === "string" ? value : JSON.stringify(value)}`
+  );
+  const requirements = trace?.requirement_refs || [];
+  const sameValues = (left, right) =>
+    left.length === right.length && [...left].sort().every((value, index) => value === [...right].sort()[index]);
+  const evidenceItems = Object.entries(trace?.evidence_refs || {})
+    .filter(([kind, refs]) => kind !== "rule_ids" || !sameValues(refs || [], requirements))
+    .map(([kind, refs]) => `${kind.replaceAll("_", " ")}: ${(refs || []).join(", ")}`);
+  const traceItems = trace ? [
+    `Canonical ID: ${trace.canonical_id} · Revision: ${trace.revision}`,
+    `Case Set: ${trace.case_set_id}`,
+    `Requirements: ${(trace.requirement_refs || []).join(", ") || "None"}`,
+    `Test points: ${(trace.coverage_refs || []).join(", ") || "None"}`,
+    ...evidenceItems,
+    ...(trace.assertions || []).map((item) =>
+      `Assertion ${item.assertion_id}: step ${item.step_no}, ${item.assertion_type}`
+    ),
+  ] : [];
   return `
     <div class="case-details">
       <div class="case-details-card">
         <div class="case-detail-column">
+          ${testDataItems.length ? renderDetailList("Test Data", testDataItems, false) : ""}
           ${renderDetailList("Preconditions", caseItem.preconditions, false)}
           ${renderDetailList("Steps", caseItem.steps, true)}
+          ${(caseItem.cleanup || []).length ? renderDetailList("Cleanup", caseItem.cleanup, false) : ""}
+          ${trace ? renderDetailList("Traceability", traceItems, false) : ""}
         </div>
         <div class="case-detail-column">
           ${renderDetailList("Expected Results", caseItem.expected_results, false)}
@@ -1079,6 +1111,9 @@ function matchesCurrentFilter(caseItem) {
     ...(caseItem.steps || []),
     ...(caseItem.expected_results || []),
     ...(caseItem.tags || []),
+    ...Object.entries(caseItem.test_data || {}).flatMap(([key, value]) => [key, JSON.stringify(value)]),
+    ...(caseItem.cleanup || []),
+    ...Object.values(caseItem.traceability || {}).flatMap((value) => Array.isArray(value) ? value : (typeof value === "object" && value ? Object.values(value).flat() : [value])),
   ].join(" ").toLowerCase();
   return haystack.includes(state.query);
 }

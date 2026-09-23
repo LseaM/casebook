@@ -85,12 +85,15 @@ def case_to_api(case: dict[str, Any], index: int) -> dict[str, Any]:
         "id": str(case.get("id", "N/A")),
         "title": str(case.get("title", "Untitled")),
         "description": str(case.get("description", "") or "").strip(),
+        "test_data": case.get("test_data") if isinstance(case.get("test_data"), dict) else {},
+        "cleanup": normalize_list(case.get("cleanup", [])),
         "priority": normalize_priority(case.get("priority", "P2")),
         "type": str(case.get("type", "functional")),
         "preconditions": normalize_list(case.get("preconditions", [])),
         "steps": normalize_list(case.get("steps", [])),
         "expected_results": normalize_list(case.get("expected_results", [])),
         "tags": normalize_list(case.get("tags", [])),
+        "traceability": case.get("traceability") if isinstance(case.get("traceability"), dict) else None,
         "auto": bool(case.get("auto", False)),
     }
 
